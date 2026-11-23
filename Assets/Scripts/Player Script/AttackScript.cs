@@ -1,23 +1,31 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class AttackScript : MonoBehaviour
 {
-    
-    public float damage = 2f;
+    [SerializeField] private float damage = 10f;
     public float radius = 1f;
     public LayerMask layerMask;
 
+    private readonly Collider[] hits = new Collider[10];
+
     void Update()
     {
-        Collider[] hits = Physics.OverlapSphere(transform.position, radius, layerMask);
+        int hitCount = Physics.OverlapSphereNonAlloc(
+            transform.position,
+            radius,
+            hits,
+            layerMask
+        );
 
-        if(hits.Length > 0)
+        if (hitCount > 0)
         {
-            hits[0].gameObject.GetComponent<HealthScript>().ApplyDamage(damage);
-            // We touched the enemy
-            gameObject.SetActive(false);
+            HealthScript healthScript = hits[0].GetComponent<HealthScript>();
+
+            if (healthScript != null)
+            {
+                healthScript.ApplyDamage(damage);
+                gameObject.SetActive(false);
+            }
         }
     }
 }

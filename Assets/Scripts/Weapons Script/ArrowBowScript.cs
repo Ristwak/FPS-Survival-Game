@@ -30,9 +30,9 @@ public class ArrowBowScript : MonoBehaviour
 
     public void Launch(Camera maincamera)
     {
-        myBody.velocity = maincamera.transform.forward * speed;
+        myBody.linearVelocity = maincamera.transform.forward * speed;
 
-        transform.LookAt(transform.position + myBody.velocity);
+        transform.LookAt(transform.position + myBody.linearVelocity);
     }
 
     private void OnTriggerEnter(Collider target)
