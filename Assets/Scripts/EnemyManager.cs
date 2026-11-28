@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class EnemyManager : MonoBehaviour
@@ -18,6 +17,8 @@ public class EnemyManager : MonoBehaviour
 
     public float wait_before_spawn_enemyTime;
 
+    private Coroutine spawnCoroutine;
+
     void Awake()
     {
         makeInstance();
@@ -30,15 +31,13 @@ public class EnemyManager : MonoBehaviour
 
         SpawnEnemies();
 
-        StartCoroutine("CheckToSpawnEnemies");
+        spawnCoroutine = StartCoroutine(CheckToSpawnEnemies());
     }
 
     void makeInstance()
     {
-        if(instance == null)
+        if (instance == null)
             instance = this;
-        
-
     }
 
     void SpawnEnemies()
@@ -49,13 +48,11 @@ public class EnemyManager : MonoBehaviour
 
     void SpawnCannivals()
     {
-        int index = 0;
+        int spawnCount = Mathf.Min(cannibal_enemy_Count, cannibal_Spawnpoints.Length);
 
-        for (int i = 0; i < cannibal_enemy_Count; i++)
+        for (int i = 0; i < spawnCount; i++)
         {
-            Instantiate(canibal_prefab, cannibal_Spawnpoints[index].position, Quaternion.identity);
-
-            index ++;
+            Instantiate(canibal_prefab, cannibal_Spawnpoints[i].position, Quaternion.identity);
         }
 
         cannibal_enemy_Count = 0;
@@ -63,35 +60,34 @@ public class EnemyManager : MonoBehaviour
 
     void SpawnBoars()
     {
-        int index = 0;
+        int spawnCount = Mathf.Min(boar_enemy_Count, boar_Spawnpoints.Length);
 
-        for (int i = 0; i < boar_enemy_Count; i++)
+        for (int i = 0; i < spawnCount; i++)
         {
-            Instantiate(boar_prefab, boar_Spawnpoints[index].position, Quaternion.identity);
-
-            index ++;
+            Instantiate(boar_prefab, boar_Spawnpoints[i].position, Quaternion.identity);
         }
 
         boar_enemy_Count = 0;
     }
-    
+
     IEnumerator CheckToSpawnEnemies()
     {
-        yield return new WaitForSeconds(wait_before_spawn_enemyTime);
+        while (true)
+        {
+            yield return new WaitForSeconds(wait_before_spawn_enemyTime);
 
-        SpawnCannivals();
-        SpawnBoars();
-
-        StartCoroutine("CheckToSpawnEnemies");
+            SpawnCannivals();
+            SpawnBoars();
+        }
     }
 
     public void EnemyDied(bool cannibal)
     {
-        if(cannibal)
+        if (cannibal)
         {
             cannibal_enemy_Count++;
 
-            if(cannibal_enemy_Count > initial_Cannibal_Count)
+            if (cannibal_enemy_Count > initial_Cannibal_Count)
             {
                 cannibal_enemy_Count = initial_Cannibal_Count;
             }
@@ -100,7 +96,7 @@ public class EnemyManager : MonoBehaviour
         {
             boar_enemy_Count++;
 
-            if(boar_enemy_Count > initial_Boar_Count)
+            if (boar_enemy_Count > initial_Boar_Count)
             {
                 boar_enemy_Count = initial_Boar_Count;
             }
@@ -109,6 +105,10 @@ public class EnemyManager : MonoBehaviour
 
     public void StopSpawning()
     {
-        StopCoroutine("CheckToSpawnEnemies");
+        if (spawnCoroutine != null)
+        {
+            StopCoroutine(spawnCoroutine);
+            spawnCoroutine = null;
+        }
     }
 }

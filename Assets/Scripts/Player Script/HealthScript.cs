@@ -1,16 +1,16 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.AI;
 
 public class HealthScript : MonoBehaviour
 {
-
     private EnemyAnimator enemy_Anim;
-    private NavMeshAgent navAgent;
+    private UnityEngine.AI.NavMeshAgent navAgent;
     private EnemyController enemy_Controller;
 
     public float health = 100f;
+
+    [SerializeField] private float cannibal_Health = 100f;
+    [SerializeField] private float boar_Health = 150f;
 
     public bool is_Player, is_Boar, is_Cannibal;
 
@@ -19,20 +19,22 @@ public class HealthScript : MonoBehaviour
     private EnemyAudio enemy_audio;
 
     private PlayerStats player_Stats;
-    
+
     void Awake()
     {
-        if(is_Boar || is_Cannibal)
+        if (is_Boar || is_Cannibal)
         {
+            health = is_Boar ? boar_Health : cannibal_Health;
+
             enemy_Anim = GetComponent<EnemyAnimator>();
             enemy_Controller = GetComponent<EnemyController>();
-            navAgent = GetComponent<NavMeshAgent>();
+            navAgent = GetComponent<UnityEngine.AI.NavMeshAgent>();
 
             // get enemy audio
             enemy_audio = GetComponentInChildren<EnemyAudio>();
         }
 
-        if(is_Player)
+        if (is_Player)
         {
             player_Stats = GetComponent<PlayerStats>();
         }
@@ -40,26 +42,26 @@ public class HealthScript : MonoBehaviour
 
     public void ApplyDamage(float damage)
     {
-        if(is_dead)
+        if (is_dead)
             return;
-        
+
         health -= damage;
 
-        if(is_Player)
+        if (is_Player)
         {
-            // display the healthUI
+            // display the health UI
             player_Stats.Display_HealthStats(health);
         }
 
-        if(is_Boar || is_Cannibal)
+        if (is_Boar || is_Cannibal)
         {
-            if(enemy_Controller.Enemy_State == EnemyState.PATROL)
+            if (enemy_Controller.Enemy_State == EnemyState.PATROL)
             {
                 enemy_Controller.chase_Distance = 50f;
             }
         }
 
-        if(health <= 0)
+        if (health <= 0)
         {
             PlayerDied();
             is_dead = true;
@@ -68,13 +70,11 @@ public class HealthScript : MonoBehaviour
 
     void PlayerDied()
     {
-        if(is_Cannibal)
+        if (is_Cannibal)
         {
-            // GetComponent<Animation>().enabled = false;
             gameObject.GetComponent<Animator>().enabled = false;
             GetComponent<BoxCollider>().enabled = false;
-            gameObject.transform.Rotate(90f,0f,0f);
-            // GetComponent<Rigidbody>().AddTorque(-transform.forward * 50);
+            gameObject.transform.Rotate(90f, 0f, 0f);
 
             enemy_Controller.enabled = false;
             navAgent.enabled = false;
@@ -86,7 +86,7 @@ public class HealthScript : MonoBehaviour
             EnemyManager.instance.EnemyDied(true);
         }
 
-        if(is_Boar)
+        if (is_Boar)
         {
             navAgent.velocity = Vector3.zero;
             navAgent.isStopped = true;
@@ -100,23 +100,21 @@ public class HealthScript : MonoBehaviour
             EnemyManager.instance.EnemyDied(false);
         }
 
-        if(is_Player)
+        if (is_Player)
         {
             GameObject[] enemies = GameObject.FindGameObjectsWithTag(Tags.ENEMY_TAG);
 
-            for(int i = 0; i < enemies.Length; i++)
+            for (int i = 0; i < enemies.Length; i++)
             {
                 enemies[i].GetComponent<EnemyController>().enabled = false;
             }
-
-            // call enemy manager to stop spawning the enemies
 
             GetComponent<PlayerMovement>().enabled = false;
             GetComponent<PlayerAttack>().enabled = false;
             GetComponent<WeaponManager>().GetCurrentSelectedWeapon().gameObject.SetActive(false);
         }
 
-        if(tag == Tags.PLAYER_TAG)
+        if (tag == Tags.PLAYER_TAG)
         {
             Invoke("RestartGame", 3f);
         }
